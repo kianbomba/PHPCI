@@ -9,8 +9,6 @@
 
 namespace PHPCI\Model\Build;
 
-use PHPCI\Model\Build;
-use PHPCI\Model\Build\RemoteGitBuild;
 
 /**
 * BitBucket Build Model
@@ -48,5 +46,71 @@ class BitbucketBuild extends RemoteGitBuild
         } else {
             return 'https://bitbucket.org/' . $this->getProject()->getReference() . '.git';
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function sendStatusPostback()
+    {
+        $userpwd = \b8\Config::getInstance()->get("phpci.bitbucket.userpwd");
+        if (empty($userpwd) || empty($this->data['id']) || empty($this->data['commit_id'])) {
+            return;
+        }
+
+        $preferences = $this->getProject()->getReference();
+        $preferences = explode("/", $preferences);
+
+        if (!isset($preferences[0]) || !isset($preferences[1])) {
+            return;
+        }
+
+        $username = $preferences[0];
+        $repoSlug = $preferences[1];
+
+        $baseUrl = \b8\Config::getInstance()->get("phpci.url");
+        $data = array (
+            'state' => '',
+            'key' => $this->getBranch() . "-" .  $this->data['id'],
+            'name' => $this->getBranch() . "-" .  $this->data['id'],
+            'url' => "{$baseUrl}/build/view/{$this->data['id']}",
+            'description' => ""
+        );
+
+
+
+        // https://api.bitbucket.org/2.0/repositories/<user-name>/<repo-name>/commit/<hash>/statuses/build"
+        $url = "https://api.bitbucket.org/2.0/repositories/{$username}/{$repoSlug}/commit/{$this->data['commit_id']}/statuses/build";
+        switch ($this->getStatus()) {
+            case 0:
+            case 1:
+                $data['state'] = 'INPROGRESS';
+                $data['description'] = 'In progress';
+                break;
+            case 2:
+                $data['state'] = 'SUCCESSFUL';
+                $data['description'] = 'Successful';
+                break;
+            case 3:
+            default:
+                $data['state'] = 'FAILED';
+                $data['description'] = 'Failed';
+                break;
+        }
+
+        $payload = json_encode($data);
+        $headers = array(
+            'Content-Type: application/json',
+        );
+
+        $curl = curl_init($url);
+
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($curl, CURLOPT_USERPWD, $userpwd);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+
+        curl_exec($curl);
+        curl_close($curl);
     }
 }

@@ -35,7 +35,7 @@
     },
 
     "require": {
-        "php": ">=5.3.8",
+        "php": "7.2",
         "ext-pdo": "*",
         "ext-pdo_mysql": "*",
         "block8/b8framework": "~1.0",
@@ -51,7 +51,9 @@
         "pda/pheanstalk": "~3.1",
         "maknz/slack": "~1.7",
         "hipchat/hipchat-php": "~1.4",
-        "mremi/flowdock": "~1.0"
+        "mremi/flowdock": "~1.0",
+        "ext-json": "*",
+        "ext-curl": "*"
     },
 
     "require-dev": {

@@ -87,7 +87,9 @@ class Shell implements \PHPCI\Plugin
 
         foreach ($this->commands as $command) {
             $command = $this->phpci->interpolate($command);
+            $command = (string) str_replace("//", "/", $command);
 
+            $this->phpci->log("Executing: {$command}");
             if (!$this->phpci->executeCommand($command)) {
                 $success = false;
             }

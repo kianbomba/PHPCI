@@ -186,6 +186,7 @@ class Builder implements LoggerAwareInterface
         $this->build->setStarted(new \DateTime());
         $this->store->save($this->build);
         $this->build->sendStatusPostback();
+
         $success = true;
 
         $previous_build = $this->build->getProject()->getPreviousBuild($this->build->getBranch());
@@ -305,7 +306,7 @@ class Builder implements LoggerAwareInterface
     protected function setupBuild()
     {
         $this->buildPath = $this->build->getBuildPath();
-
+        $this->log("Build Path: {$this->buildPath}");
         $this->interpolator->setupInterpolationVars(
             $this->build,
             $this->buildPath,

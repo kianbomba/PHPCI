@@ -95,7 +95,43 @@ class WebhookController extends \b8\Controller
 
         $payload = json_decode(file_get_contents("php://input"), true);
 
-        if (empty($payload['push']['changes'])) {
+        if (empty($payload['push']['changes']) && !empty($payload['pullrequest']['source'])) {
+            $source = $payload['pullrequest']['source'];
+            $branch = isset($source['branch']['name']) ? $source['branch']['name'] : 'master';
+            if (!isset($source['commit']['hash'])) {
+                return [
+                    'status' => 'failed',
+                    'commits' => []
+                ];
+            }
+            try {
+                $results = $this->createBuild(
+                    $project,
+                    $source['commit']['hash'],
+                    $branch,
+                    "kianbomba@gmail.com",
+                    "",
+                    true
+                );
+
+                return array(
+                    'status' => 'okay',
+                    'commits' => [
+                        $source['commit']['hash'] => $results
+                    ]
+                );
+            } catch (Exception $e) {
+                return array(
+                    'status' => true,
+                    'commits' => [
+                        $source['commit']['hash'] => [
+                            'status' => 'error',
+                            'message' => $e->getMessage()
+                        ]
+                    ]
+                );
+            }
+        } elseif (empty($payload['push']['changes'])) {
             // Invalid event from bitbucket
             return [
                 'status' => 'failed',
