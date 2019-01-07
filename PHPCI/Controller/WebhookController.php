@@ -115,14 +115,14 @@ class WebhookController extends \b8\Controller
                 );
 
                 return array(
-                    'status' => 'okay',
+                    'status' => 'ok',
                     'commits' => [
                         $source['commit']['hash'] => $results
                     ]
                 );
             } catch (Exception $e) {
                 return array(
-                    'status' => true,
+                    'status' => 'ok',
                     'commits' => [
                         $source['commit']['hash'] => [
                             'status' => 'error',
